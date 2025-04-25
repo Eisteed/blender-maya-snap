@@ -1,4 +1,4 @@
-<h3>Create two custom hotkeys to replicate maya's snapping (press & release)</h3>
+<h3>2 Hotkeys to replicate maya's snapping (press & release)</h3>
 
 - V for vertex snapping
 - C for grid snapping
