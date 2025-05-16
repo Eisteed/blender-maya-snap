@@ -55,7 +55,7 @@ def restore_snap_settings(context, settings):
     ts.snap_target = settings['snap_target']
     ts.use_snap_align_rotation = settings['use_snap_align_rotation']
 
-class Snap_to_grid(bpy.types.Operator):
+class OBJECT_OT_Snap_to_grid(bpy.types.Operator):
     bl_idname = "view3d.snap_to_grid"
     bl_label = "Snap To Grid"
 
@@ -78,7 +78,7 @@ class Snap_to_grid(bpy.types.Operator):
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
-class Snap_to_vertex(bpy.types.Operator):
+class OBJECT_OT_Snap_to_vertex(bpy.types.Operator):
     bl_idname = "view3d.snap_to_vertex"
     bl_label = "Snap To Vertex"
 
@@ -106,42 +106,43 @@ class Snap_Preferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        box = layout.box()
-        wm = context.window_manager
-        kc = wm.keyconfigs.user
+        box = layout.row().box()
+        FindConflict(box, "view3d.snap_to_grid")
+        box = layout.row().box()
+
+        box2 = layout.row().box()
+        FindConflict(box2, "view3d.snap_to_vertex")
+        box2 = layout.row().box()
+
+        ku = bpy.context.window_manager.keyconfigs.user
+        km = ku.keymaps.get('3D View')
+
+        kmi = km.keymap_items.get('view3d.snap_to_grid')
+        rna_keymap_ui.draw_kmi([], ku, km, kmi, box, 0)
         
-        if kc:
-            km = kc.keymaps['3D View']
-            for kmi in km.keymap_items:
-                if kmi.idname == 'view3d.snap_to_vertex':
-                    label = kmi.name
-                    rna_keymap_ui.draw_kmi([], kc, km, kmi, box, 0)
-                    FindConflict(box, 'view3d.snap_to_vertex')
-                elif kmi.idname == 'view3d.snap_to_grid':
-                    label = kmi.name
-                    rna_keymap_ui.draw_kmi([], kc, km, kmi, box, 0)
-                    FindConflict(box, 'view3d.snap_to_grid')
+        kmi2 = km.keymap_items.get('view3d.snap_to_vertex')
+        rna_keymap_ui.draw_kmi([], ku, km, kmi2, box2, 0)
 
 classes = [
-    Snap_to_grid,
-    Snap_to_vertex,
+    OBJECT_OT_Snap_to_grid,
+    OBJECT_OT_Snap_to_vertex,
     Snap_Preferences
 ]
+
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
     wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
+    kc=wm.keyconfigs.addon
 
     if kc:
-        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
-
-        kmi_grid = km.keymap_items.new("view3d.snap_to_grid", 'X', 'PRESS')
-        kmi_vertex = km.keymap_items.new("view3d.snap_to_vertex", 'V', 'PRESS')
-
-        addon_keymaps.extend([(km, kmi_grid), (km, kmi_vertex)])
+        km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
+        akmi = km.keymap_items.new('view3d.snap_to_vertex', type = 'V', value = 'PRESS', ctrl = False, shift = False)
+        addon_keymaps.append((km, akmi))
+        akmi2 = km.keymap_items.new('view3d.snap_to_grid', type = 'X', value = 'PRESS', ctrl = False, shift = False)
+        addon_keymaps.append((km, akmi2))
 
 def unregister():
     for km, kmi in addon_keymaps:
